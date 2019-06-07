@@ -16,6 +16,8 @@ private:
     node *root;
     unsigned rows, columns;
 
+    void check(unsigned, unsigned) const;
+
 public:
 
     Matrix(unsigned rows, unsigned columns);
@@ -28,6 +30,14 @@ public:
     Matrix<T> operator-(Matrix<T> other) const;
     Matrix<T> transpose() const;
     void print() const;
+    
+    void clear(){
+        for(node* temp = root->down; temp; temp = temp->down){
+            node* temp2 = temp->next;
+            if(temp2)
+                temp2->killSelf();
+        }
+    }
 
     ~Matrix(){};
 };
@@ -53,7 +63,16 @@ Matrix<T>::Matrix(unsigned rows, unsigned columns){
 }
 
 template <typename T>
+void Matrix<T>::check(unsigned row, unsigned column) const{
+    if(row >= rows || column >= columns){
+        throw "Index out of matrix range";
+    }
+}
+
+template <typename T>
 void Matrix<T>::set(unsigned row, unsigned column, T data){
+    check(row, column);
+    if(data == 0) return;
     node* toAdd = new node(row, column, data);
 
     node** temp = &root;
@@ -87,6 +106,7 @@ void Matrix<T>::set(unsigned row, unsigned column, T data){
 
 template <typename T>
 T Matrix<T>::operator()(unsigned row, unsigned column) const{
+    check(row, column);
     node* temp = root;
 
     for(int i = 0; i<=row; i++){
