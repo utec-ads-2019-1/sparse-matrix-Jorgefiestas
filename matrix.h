@@ -13,33 +13,46 @@ class Matrix {
 private:
     typedef Node<T> node;
 
-    node *root;
-    unsigned rows, columns;
+    node *root = nullptr;
+    unsigned rows = 0, columns = 0;
 
     void check(unsigned, unsigned) const;
 
 public:
 
+    Matrix() = default;
     Matrix(unsigned rows, unsigned columns);
+    Matrix(const Matrix<T> &);
 
     void set(unsigned, unsigned, T);
     T operator()(unsigned, unsigned) const;
-    Matrix<T> operator*(T scalar) const;
-    Matrix<T> operator*(Matrix<T> other) const;
-    Matrix<T> operator+(Matrix<T> other) const;
-    Matrix<T> operator-(Matrix<T> other) const;
-    Matrix<T> transpose() const;
+    Matrix<T>& operator=(const Matrix<T> &);
+    const Matrix<T> operator*(T scalar) const;
+    const Matrix<T> operator*(Matrix<T> other) const;
+    const Matrix<T> operator+(Matrix<T> other) const;
+    const Matrix<T> operator-(Matrix<T> other) const;
+    const Matrix<T> transpose() const;
     void print() const;
     
     void clear(){
+        if(!root) return;
+        for(node* temp = root->down; temp; temp = temp->down){
+            node* temp2 = temp->next;
+            if(temp2)
+                temp2->killSelf();
+        }
+        rows = 0;
+        columns = 0;
+        root = nullptr;
+    }
+
+    ~Matrix(){
         for(node* temp = root->down; temp; temp = temp->down){
             node* temp2 = temp->next;
             if(temp2)
                 temp2->killSelf();
         }
     }
-
-    ~Matrix(){};
 };
 
 template <typename T>
@@ -63,6 +76,33 @@ Matrix<T>::Matrix(unsigned rows, unsigned columns){
 }
 
 template <typename T>
+Matrix<T>::Matrix(const Matrix<T> &mat){
+    rows = mat.rows;
+    columns = mat.columns;
+
+    root = new node();
+    node* temp;
+
+    temp = root;
+    for(int i = 0; i<=rows; i++){
+        temp->down = new node();
+        temp = temp->down;
+    }
+
+    temp = root;
+    for(int i = 0; i<=columns; i++){
+        temp->next = new node();
+        temp = temp->next;
+    }
+
+    for(int i = 0; i<rows; i++){
+        for(int j = 0; j<columns; j++){
+            this->set(i, j, mat(i, j));
+        }
+    }
+}
+
+template <typename T>
 void Matrix<T>::check(unsigned row, unsigned column) const{
     if(row >= rows || column >= columns){
         throw "Index out of matrix range";
@@ -72,7 +112,6 @@ void Matrix<T>::check(unsigned row, unsigned column) const{
 template <typename T>
 void Matrix<T>::set(unsigned row, unsigned column, T data){
     check(row, column);
-    if(data == 0) return;
     node* toAdd = new node(row, column, data);
 
     node** temp = &root;
@@ -85,10 +124,21 @@ void Matrix<T>::set(unsigned row, unsigned column, T data){
         temp = &((*temp)->next);
     }
 
-    if(*temp && (*temp)->cpos == column) throw "Index already set!";
-
-    toAdd->next = *temp;
-    *temp = toAdd;
+    if(*temp && (*temp)->cpos == column){
+        if(data){
+            (*temp)->data = data;
+            return;
+        }
+        node* next = (*temp)->next;
+        *temp = next;
+    }
+    else if(data != 0){
+        toAdd->next = *temp;
+        *temp = toAdd;
+    }
+    else{
+        return;
+    }
 
     temp = &root;
     for(int i = 0; i<=column; i++){
@@ -100,8 +150,43 @@ void Matrix<T>::set(unsigned row, unsigned column, T data){
         temp = &((*temp)->down);
     }
 
+    if(*temp && (*temp)->rpos == row){
+        node* down = (*temp)->down;
+        delete *temp;
+        *temp = down;
+    }
+
     toAdd->down = *temp;
     *temp = toAdd;
+}
+
+template <typename T>
+Matrix<T>& Matrix<T>::operator=(const Matrix<T> &mat){
+    rows = mat.rows;
+    columns = mat.columns;
+
+    root = new node();
+    node* temp;
+
+    temp = root;
+    for(int i = 0; i<=rows; i++){
+        temp->down = new node();
+        temp = temp->down;
+    }
+
+    temp = root;
+    for(int i = 0; i<=columns; i++){
+        temp->next = new node();
+        temp = temp->next;
+    }
+
+    for(int i = 0; i<rows; i++){
+        for(int j = 0; j<columns; j++){
+            this->set(i, j, mat(i, j));
+        }
+    }
+
+    return *this;
 }
 
 template <typename T>
@@ -125,7 +210,7 @@ T Matrix<T>::operator()(unsigned row, unsigned column) const{
 }
 
 template <typename T>
-Matrix<T> Matrix<T>::operator*(T scalar) const{
+const Matrix<T> Matrix<T>::operator*(T scalar) const{
     Matrix<T> ans(rows, columns);
 
     for(node* t = root->down; t; t = t->down){
@@ -139,7 +224,7 @@ Matrix<T> Matrix<T>::operator*(T scalar) const{
 }
 
 template <typename T>
-Matrix<T> Matrix<T>::operator*(Matrix<T> other) const{
+const Matrix<T> Matrix<T>::operator*(Matrix<T> other) const{
     Matrix<T> ans(rows, other.columns);
     
     for(int i = 0; i<rows; i++){
@@ -159,7 +244,7 @@ Matrix<T> Matrix<T>::operator*(Matrix<T> other) const{
 }
 
 template <typename T>
-Matrix<T> Matrix<T>::operator+(Matrix<T> other) const{
+const Matrix<T> Matrix<T>::operator+(Matrix<T> other) const{
     Matrix<T> ans(rows, columns);
 
     for(int i = 0; i<rows; i++){
@@ -175,7 +260,7 @@ Matrix<T> Matrix<T>::operator+(Matrix<T> other) const{
 }
             
 template <typename T>
-Matrix<T> Matrix<T>::operator-(Matrix<T> other) const{
+const Matrix<T> Matrix<T>::operator-(Matrix<T> other) const{
     Matrix<T> ans(rows, columns);
 
     for(int i = 0; i<rows; i++){
@@ -192,7 +277,7 @@ Matrix<T> Matrix<T>::operator-(Matrix<T> other) const{
 
 
 template <typename T>
-Matrix<T> Matrix<T>::transpose() const{
+const Matrix<T> Matrix<T>::transpose() const{
     Matrix<T> ans(rows, columns);
 
     for(int i = 0; i<rows; i++){

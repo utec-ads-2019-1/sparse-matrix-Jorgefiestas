@@ -16,9 +16,10 @@ int main(){
         }
     }
 
-    Matrix<int> mat3 = mat1+mat2;
-    Matrix<int> mat4 = mat1-mat2;
-    Matrix<int> mat5 = mat1*mat2;
+    cout<<"MAT1"<<endl;
+    mat1.print();
+
+    mat1.set(0, 0, 0);
 
     cout<<"MAT1"<<endl;
     mat1.print();
@@ -26,12 +27,16 @@ int main(){
     cout<<"MAT2:"<<endl;
     mat2.print();
 
+    Matrix<int> mat3;
+    mat3 = mat1+mat2;
     cout<<"MAT1+MAT2:"<<endl;
     mat3.print();
 
+    Matrix<int> mat4 = mat1-mat2;
     cout<<"MAT1-MAT2:"<<endl;
     mat4.print();
 
+    Matrix<int> mat5 = mat1*mat2;
     cout<<"MAT1*MAT2:"<<endl;
     mat5.print();
 
