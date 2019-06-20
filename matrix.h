@@ -33,24 +33,12 @@ public:
     const Matrix<T> operator-(Matrix<T> other) const;
     const Matrix<T> transpose() const;
     void print() const;
-    
-    void clear(){
-        if(!root) return;
-        for(node* temp = root->down; temp; temp = temp->down){
-            node* temp2 = temp->next;
-            if(temp2)
-                temp2->killSelf();
-        }
-        rows = 0;
-        columns = 0;
-        root = nullptr;
-    }
 
     ~Matrix(){
-        for(node* temp = root->down; temp; temp = temp->down){
-            node* temp2 = temp->next;
-            if(temp2)
-                temp2->killSelf();
+        for(node* temp = root; temp; temp = temp){
+            node* temp2 = temp->down;
+            temp->killSelf();
+            temp = temp2;
         }
     }
 };
@@ -154,6 +142,7 @@ void Matrix<T>::set(unsigned row, unsigned column, T data){
         node* down = (*temp)->down;
         delete *temp;
         *temp = down;
+        return;
     }
 
     toAdd->down = *temp;
